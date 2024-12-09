@@ -20,5 +20,11 @@ namespace lab5
         {
             InitializeComponent();
         }
+
+        private void Button3_Click(object sender, RoutedEventArgs e)
+        {
+            TaskThreeFourWindow taskThreeFourWindow = new TaskThreeFourWindow();
+            taskThreeFourWindow.Show();
+        }
     }
 }
