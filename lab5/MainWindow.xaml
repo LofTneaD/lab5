@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:lab5"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="600"> 
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="600">
+        <Button x:Name="Button1" Content="TaskOne" Click="Button1_Click" Margin="10"/>
         <Button x:Name="Button3" Content="TaskThree/Four" Click="Button3_Click" Margin="10"/>
     </StackPanel>
 </Window>

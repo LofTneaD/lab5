@@ -1,0 +1,27 @@
+<Window x:Class="lab5.TaskOne"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:lab5"
+        mc:Ignorable="d"
+        Title="TaskOne" Height="450" Width="800"
+        KeyDown="Window_KeyDown">
+    <Grid>
+        <!-- Верхняя панель с кнопками -->
+        <DockPanel LastChildFill="True">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Background="LightGray" Height="40">
+                <Button Content="Save Graph" Margin="5" Padding="10,5" Click="SaveButton_Click" />
+                <Button Content="Load Graph" Margin="5" Padding="10,5" Click="LoadButton_Click" />
+                <Button Content="BFS" Margin="5" Padding="10,5" Click="BFSButton_Click" />
+                <Button Content="DFS" Margin="5" Padding="10,5" Click="DFSButton_Click" />
+            </StackPanel>
+
+            <!-- Область для редактирования графа -->
+            <Canvas Name="GraphCanvas"
+                    Background="White"
+                    MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
+                    Focusable="True" />
+        </DockPanel>
+    </Grid>
+</Window>
