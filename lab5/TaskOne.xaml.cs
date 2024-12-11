@@ -35,7 +35,13 @@ public partial class TaskOne : Window
             Node targetNode = GetNodeAtPosition(clickPosition);
             if (targetNode != null && targetNode != selectedNode)
             {
-                AddEdge(selectedNode, targetNode);
+                // Запрашиваем вес ребра у пользователя
+                InputBox inputBox = new InputBox("Enter edge weight:");
+                if (inputBox.ShowDialog() == true)
+                {
+                    int weight = int.Parse(inputBox.Result);  // Преобразуем введённое значение в число
+                    AddEdge(selectedNode, targetNode, weight);
+                }
             }
             selectedNode = null;
         }
@@ -67,7 +73,7 @@ public partial class TaskOne : Window
     }
 
 
-    private void AddEdge(Node node1, Node node2)
+    private void AddEdge(Node node1, Node node2, int weight)
     {
         // Добавляем линию на Canvas
         Line line = new Line
@@ -79,11 +85,23 @@ public partial class TaskOne : Window
             Stroke = Brushes.Black,
             StrokeThickness = 2
         };
-
         GraphCanvas.Children.Add(line);
-        edges.Add(new Edge { Node1 = node1, Node2 = node2, Line = line });
 
-        // Обновляем смежный список для обеих вершин
+        // Добавляем текст веса ребра
+        TextBlock weightText = new TextBlock
+        {
+            Text = weight.ToString(),
+            FontSize = 14,
+            Background = Brushes.White
+        };
+        Canvas.SetLeft(weightText, (node1.Position.X + node2.Position.X) / 2);
+        Canvas.SetTop(weightText, (node1.Position.Y + node2.Position.Y) / 2);
+        GraphCanvas.Children.Add(weightText);
+
+        // Сохраняем ребро
+        edges.Add(new Edge { Node1 = node1, Node2 = node2, Line = line, Weight = weight, WeightText = weightText });
+
+        // Обновляем смежный список
         int index1 = nodes.IndexOf(node1);
         int index2 = nodes.IndexOf(node2);
 
@@ -92,10 +110,12 @@ public partial class TaskOne : Window
         if (!adjList.ContainsKey(index2))
             adjList[index2] = new List<Tuple<int, int>>();
 
-        // Здесь мы добавляем соседа в список
-        adjList[index1].Add(new Tuple<int, int>(index2, 0)); // 0 — вес, если он не используется
-        adjList[index2].Add(new Tuple<int, int>(index1, 0)); // добавляем обратно для неориентированного графа
+        adjList[index1].Add(new Tuple<int, int>(index2, weight));
+        adjList[index2].Add(new Tuple<int, int>(index1, weight)); // Для неориентированного графа
     }
+
+
+
 
 
     private Node GetNodeAtPosition(Point position)
@@ -114,15 +134,35 @@ public partial class TaskOne : Window
 
     private void DeleteNode(Node node)
     {
+        // Удаление всех рёбер, связанных с этим узлом
         foreach (var edge in edges.FindAll(e => e.Node1 == node || e.Node2 == node))
         {
-            GraphCanvas.Children.Remove(edge.Line);
+            GraphCanvas.Children.Remove(edge.Line);      // Удаляем линию ребра
+            GraphCanvas.Children.Remove(edge.WeightText); // Удаляем текст веса ребра
         }
+
+        // Удаление рёбер из списка
         edges.RemoveAll(e => e.Node1 == node || e.Node2 == node);
 
+        // Удаление узла из смежного списка
+        int index = nodes.IndexOf(node);
+        if (adjList.ContainsKey(index))
+        {
+            adjList.Remove(index); // Удаляем текущий узел из смежного списка
+        }
+
+        // Удаление всех рёбер, которые ведут к удалённому узлу
+        foreach (var key in adjList.Keys.ToList())
+        {
+            adjList[key].RemoveAll(e => e.Item1 == index); // Удаляем связи с удалённым узлом
+        }
+
+        // Удаление самого узла
         GraphCanvas.Children.Remove(node.Ellipse);
         nodes.Remove(node);
     }
+
+
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
@@ -148,9 +188,11 @@ public partial class TaskOne : Window
                 visited.Add(vertex);
                 result.Add(vertex);
 
-                foreach (var neighbor in adjList[vertex])
+                // Сортируем соседей по возрастанию веса перед добавлением в стек
+                var neighbors = adjList[vertex];
+                foreach (var neighbor in neighbors.OrderByDescending(n => n.Item2)) // По убыванию, чтобы меньший вес обрабатывался позже
                 {
-                    if (!visited.Contains(neighbor.Item1)) // Используем Item1 для доступа к индексу соседа
+                    if (!visited.Contains(neighbor.Item1))
                     {
                         stack.Push(neighbor.Item1);
                     }
@@ -160,6 +202,7 @@ public partial class TaskOne : Window
 
         return result;
     }
+
 
 
     public List<int> BFS(int start)
@@ -175,7 +218,9 @@ public partial class TaskOne : Window
             int vertex = queue.Dequeue();
             result.Add(vertex);
 
-            foreach (var neighbor in adjList[vertex])
+            // Сортируем соседей по возрастанию веса перед добавлением в очередь
+            var neighbors = adjList[vertex];
+            foreach (var neighbor in neighbors.OrderBy(n => n.Item2)) // По возрастанию веса
             {
                 if (!visited.Contains(neighbor.Item1))
                 {
@@ -187,6 +232,68 @@ public partial class TaskOne : Window
 
         return result;
     }
+    
+    public Dictionary<int, int> Dijkstra(int start, out Dictionary<int, int> previous)
+    {
+        var distances = new Dictionary<int, int>();
+        var priorityQueue = new SortedSet<(int Distance, int Vertex)>();
+        previous = new Dictionary<int, int>();
+
+        foreach (var vertex in adjList.Keys)
+        {
+            distances[vertex] = int.MaxValue; // Инициализируем расстояния бесконечностью
+            previous[vertex] = -1; // Нет предшественников
+        }
+        distances[start] = 0;
+        priorityQueue.Add((0, start));
+
+        while (priorityQueue.Count > 0)
+        {
+            var (currentDistance, currentVertex) = priorityQueue.Min;
+            priorityQueue.Remove(priorityQueue.Min);
+
+            if (currentDistance > distances[currentVertex])
+                continue;
+
+            foreach (var (neighbor, weight) in adjList[currentVertex])
+            {
+                int newDist = currentDistance + weight;
+                if (newDist < distances[neighbor])
+                {
+                    priorityQueue.Remove((distances[neighbor], neighbor));
+                    distances[neighbor] = newDist;
+                    previous[neighbor] = currentVertex;
+                    priorityQueue.Add((newDist, neighbor));
+                }
+            }
+        }
+
+        return distances;
+    }
+
+    private void ClearGraph()
+    {
+        // Удаляем все рёбра с Canvas
+        foreach (var edge in edges)
+        {
+            GraphCanvas.Children.Remove(edge.Line);      // Удаляем линию ребра
+            GraphCanvas.Children.Remove(edge.WeightText); // Удаляем текст веса ребра
+        }
+
+        // Удаляем все узлы с Canvas
+        foreach (var node in nodes)
+        {
+            GraphCanvas.Children.Remove(node.Ellipse);   // Удаляем узел
+        }
+
+        // Очищаем список рёбер и узлов
+        edges.Clear();
+        nodes.Clear();
+        adjList.Clear(); // Очистить смежный список
+    }
+
+
+
 
 
     private async Task VisualizeDFS(List<int> visitedVertices)
@@ -208,6 +315,35 @@ public partial class TaskOne : Window
             await Task.Delay(500); // Задержка в 500 миллисекунд
         }
     }
+    
+    private async Task VisualizeDijkstra(Dictionary<int, int> distances, Dictionary<int, int> previous, int start, int target)
+    {
+        // Визуализация всех вершин с рассчитанными расстояниями
+        foreach (var nodeIndex in distances.Keys)
+        {
+            if (distances[nodeIndex] == int.MaxValue)
+                continue;
+
+            var node = nodes[nodeIndex];
+            node.Ellipse.Fill = Brushes.LightBlue; // Цвет для всех посещённых вершин
+            await Task.Delay(500);
+        }
+
+        // Визуализация кратчайшего пути
+        int current = target;
+        while (current != start && current != -1)
+        {
+            var node = nodes[current];
+            node.Ellipse.Fill = Brushes.Red; // Цвет для вершин на кратчайшем пути
+            current = previous[current];
+            await Task.Delay(500);
+        }
+
+        // Выделяем стартовую вершину другим цветом
+        nodes[start].Ellipse.Fill = Brushes.Green;
+    }
+
+
 
     
     private void SaveGraph(string filePath)
@@ -222,10 +358,11 @@ public partial class TaskOne : Window
             {
                 int index1 = nodes.IndexOf(edge.Node1);
                 int index2 = nodes.IndexOf(edge.Node2);
-                writer.WriteLine($"Edge {index1} {index2}");
+                writer.WriteLine($"Edge {index1} {index2} {edge.Weight}");
             }
         }
     }
+
     
     private void LoadGraph(string filePath)
     {
@@ -248,8 +385,12 @@ public partial class TaskOne : Window
                 {
                     int index1 = int.Parse(parts[1]);
                     int index2 = int.Parse(parts[2]);
-                    AddEdge(nodes[index1], nodes[index2]);
+                    int weight = int.Parse(parts[3]);
+
+                    // Передаём вес ребра
+                    AddEdge(nodes[index1], nodes[index2], weight);
                 }
+
             }
         }
     }
@@ -297,6 +438,23 @@ public partial class TaskOne : Window
             await VisualizeDFS(visitedVertices); // Ожидание завершения анимации DFS
         }
     }
+    
+    private async void DijkstraButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (nodes.Count > 0)
+        {
+            int startVertex = 0; // Начальная вершина
+            int targetVertex = nodes.Count - 1; // Конечная вершина (можно выбрать другую)
+        
+            var distances = Dijkstra(startVertex, out var previous);
+            await VisualizeDijkstra(distances, previous, startVertex, targetVertex);
+        }
+    }
+    private void ClearGraphButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearGraph();
+    }
+
 }
 
 public class Node
@@ -310,4 +468,32 @@ public class Edge
     public Node Node1 { get; set; }
     public Node Node2 { get; set; }
     public Line Line { get; set; }
+    public int Weight { get; set; } // Вес ребра
+    public TextBlock WeightText { get; set; } // Добавляем ссылку на TextBlock для веса ребра
+}
+
+
+public class InputBox : Window
+{
+    private TextBox inputBox;
+    public string Result { get; private set; }
+
+    public InputBox(string prompt)
+    {
+        Title = "Input";
+        Width = 300;
+        Height = 150;
+
+        StackPanel panel = new StackPanel { Margin = new Thickness(10) };
+        panel.Children.Add(new TextBlock { Text = prompt, Margin = new Thickness(0, 0, 0, 10) });
+
+        inputBox = new TextBox();
+        panel.Children.Add(inputBox);
+
+        Button okButton = new Button { Content = "OK", IsDefault = true, Width = 75, Margin = new Thickness(0, 10, 0, 0) };
+        okButton.Click += (sender, e) => { Result = inputBox.Text; DialogResult = true; };
+        panel.Children.Add(okButton);
+
+        Content = panel;
+    }
 }

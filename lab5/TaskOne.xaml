@@ -15,6 +15,9 @@
                 <Button Content="Load Graph" Margin="5" Padding="10,5" Click="LoadButton_Click" />
                 <Button Content="BFS" Margin="5" Padding="10,5" Click="BFSButton_Click" />
                 <Button Content="DFS" Margin="5" Padding="10,5" Click="DFSButton_Click" />
+                <Button Content="Dijkstra" Click="DijkstraButton_Click" />
+                <Button Content="Clear Graph" Click="ClearGraphButton_Click" />
+
             </StackPanel>
 
             <!-- Область для редактирования графа -->
