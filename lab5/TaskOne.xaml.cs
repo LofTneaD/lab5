@@ -408,6 +408,95 @@ public partial class TaskOne : Window
         }
     }
     
+    private void LoadMatrix(string filePath)
+    {
+        string[] lines = File.ReadAllLines(filePath);
+        ClearGraph();
+
+        // Преобразование строк в матрицу
+        int[,] matrix = new int[lines.Length, lines[0].Split(',').Length];
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string[] values = lines[i].Split(',');
+            for (int j = 0; j < values.Length; j++)
+            {
+                matrix[i, j] = int.Parse(values[j]);
+            }
+        }
+
+        // Запрос типа матрицы
+        MessageBoxResult result = MessageBox.Show("Загруженная матрица является матрицей смежности?", "Выбор матрицы", MessageBoxButton.YesNoCancel);
+        if (result == MessageBoxResult.Yes)
+        {
+            LoadAdjacencyMatrix(matrix);
+        }
+        else if (result == MessageBoxResult.No)
+        {
+            LoadIncidenceMatrix(matrix);
+        }
+    }
+
+private void LoadAdjacencyMatrix(int[,] matrix)
+{
+    int size = matrix.GetLength(0);
+
+    // Создание вершин
+    for (int i = 0; i < size; i++)
+    {
+        AddNode(new Point(50 + i * 50, 100)); // Располагаем узлы на Canvas
+    }
+
+    // Создание рёбер
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            if (matrix[i, j] > 0)
+            {
+                AddEdge(nodes[i], nodes[j], matrix[i, j]);
+            }
+        }
+    }
+}
+
+private void LoadIncidenceMatrix(int[,] matrix)
+{
+    int nodeCount = matrix.GetLength(0);
+    int edgeCount = matrix.GetLength(1);
+
+    // Создание вершин
+    for (int i = 0; i < nodeCount; i++)
+    {
+        AddNode(new Point(50 + i * 50, 100)); // Располагаем узлы на Canvas
+    }
+
+    // Создание рёбер
+    for (int j = 0; j < edgeCount; j++)
+    {
+        int node1 = -1, node2 = -1, weight = 1;
+        for (int i = 0; i < nodeCount; i++)
+        {
+            if (matrix[i, j] != 0)
+            {
+                if (node1 == -1)
+                {
+                    node1 = i;
+                    weight = matrix[i, j];
+                }
+                else
+                {
+                    node2 = i;
+                }
+            }
+        }
+        if (node1 != -1 && node2 != -1)
+        {
+            AddEdge(nodes[node1], nodes[node2], weight);
+        }
+    }
+}
+
+    
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
         SaveFileDialog saveFileDialog = new SaveFileDialog
@@ -466,6 +555,19 @@ public partial class TaskOne : Window
     private void ClearGraphButton_Click(object sender, RoutedEventArgs e)
     {
         ClearGraph();
+    }
+
+    private void LoadMatrixButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenFileDialog openFileDialog = new OpenFileDialog
+        {
+            Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*"
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            LoadMatrix(openFileDialog.FileName);
+        }
     }
 
 }
