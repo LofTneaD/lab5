@@ -26,5 +26,11 @@ namespace lab5
             TaskThreeFourWindow taskThreeFourWindow = new TaskThreeFourWindow();
             taskThreeFourWindow.Show();
         }
+
+        private void Button1_Click(object sender, RoutedEventArgs e)
+        {
+            TaskOne taskOne = new TaskOne();
+            taskOne.Show();
+        }
     }
 }
