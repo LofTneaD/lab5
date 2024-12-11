@@ -5,11 +5,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:lab5"
         mc:Ignorable="d"
-        Title="TaskOne" Height="450" Width="800"
+        Title="TaskOne" Height="750" Width="900"
         KeyDown="Window_KeyDown">
     <Grid>
         <!-- Верхняя панель с кнопками -->
-        <DockPanel LastChildFill="True">
+        <DockPanel LastChildFill="True" Margin="0 0 0 150">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Background="LightGray" Height="40">
                 <Button Content="Save Graph" Margin="5" Padding="10,5" Click="SaveButton_Click" />
                 <Button Content="Load Graph" Margin="5" Padding="10,5" Click="LoadButton_Click" />
@@ -26,5 +26,7 @@
                     MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
                     Focusable="True" />
         </DockPanel>
+        <ListBox Name="StepsListBox" Background="Silver" Margin="0 550 0 0" />
+
     </Grid>
 </Window>

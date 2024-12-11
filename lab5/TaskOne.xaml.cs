@@ -26,6 +26,9 @@ public partial class TaskOne : Window
     {
         Point clickPosition = e.GetPosition(GraphCanvas);
 
+        // Логируем действие
+        Console.WriteLine($"Canvas Mouse Left Button Down at {clickPosition}.");
+
         if (Keyboard.IsKeyDown(Key.LeftShift))
         {
             AddNode(clickPosition);
@@ -35,7 +38,6 @@ public partial class TaskOne : Window
             Node targetNode = GetNodeAtPosition(clickPosition);
             if (targetNode != null && targetNode != selectedNode)
             {
-                // Запрашиваем вес ребра у пользователя
                 InputBox inputBox = new InputBox("Enter edge weight:");
                 if (inputBox.ShowDialog() == true)
                 {
@@ -48,6 +50,7 @@ public partial class TaskOne : Window
         else
         {
             selectedNode = GetNodeAtPosition(clickPosition);
+            Console.WriteLine($"Node selected at {clickPosition}.");
         }
     }
 
@@ -134,30 +137,26 @@ public partial class TaskOne : Window
 
     private void DeleteNode(Node node)
     {
-        // Удаление всех рёбер, связанных с этим узлом
+        Console.WriteLine($"Deleting Node at {node.Position}.");
         foreach (var edge in edges.FindAll(e => e.Node1 == node || e.Node2 == node))
         {
             GraphCanvas.Children.Remove(edge.Line);      // Удаляем линию ребра
             GraphCanvas.Children.Remove(edge.WeightText); // Удаляем текст веса ребра
         }
 
-        // Удаление рёбер из списка
         edges.RemoveAll(e => e.Node1 == node || e.Node2 == node);
 
-        // Удаление узла из смежного списка
         int index = nodes.IndexOf(node);
         if (adjList.ContainsKey(index))
         {
-            adjList.Remove(index); // Удаляем текущий узел из смежного списка
+            adjList.Remove(index);
         }
 
-        // Удаление всех рёбер, которые ведут к удалённому узлу
         foreach (var key in adjList.Keys.ToList())
         {
-            adjList[key].RemoveAll(e => e.Item1 == index); // Удаляем связи с удалённым узлом
+            adjList[key].RemoveAll(e => e.Item1 == index);
         }
 
-        // Удаление самого узла
         GraphCanvas.Children.Remove(node.Ellipse);
         nodes.Remove(node);
     }
@@ -188,9 +187,12 @@ public partial class TaskOne : Window
                 visited.Add(vertex);
                 result.Add(vertex);
 
-                // Сортируем соседей по возрастанию веса перед добавлением в стек
+                // Логируем посещённую вершину
+                string stepMessage = $"DFS: Visiting Node {vertex}.";
+                StepsListBox.Items.Add(stepMessage); // Добавляем шаг в ListBox
+
                 var neighbors = adjList[vertex];
-                foreach (var neighbor in neighbors.OrderByDescending(n => n.Item2)) // По убыванию, чтобы меньший вес обрабатывался позже
+                foreach (var neighbor in neighbors.OrderByDescending(n => n.Item2)) // По убыванию веса
                 {
                     if (!visited.Contains(neighbor.Item1))
                     {
@@ -202,6 +204,7 @@ public partial class TaskOne : Window
 
         return result;
     }
+
 
 
 
@@ -218,7 +221,10 @@ public partial class TaskOne : Window
             int vertex = queue.Dequeue();
             result.Add(vertex);
 
-            // Сортируем соседей по возрастанию веса перед добавлением в очередь
+            // Логируем посещённую вершину
+            string stepMessage = $"BFS: Visiting Node {vertex}.";
+            StepsListBox.Items.Add(stepMessage); // Добавляем шаг в ListBox
+
             var neighbors = adjList[vertex];
             foreach (var neighbor in neighbors.OrderBy(n => n.Item2)) // По возрастанию веса
             {
@@ -232,6 +238,7 @@ public partial class TaskOne : Window
 
         return result;
     }
+
     
     public Dictionary<int, int> Dijkstra(int start, out Dictionary<int, int> previous)
     {
@@ -302,6 +309,9 @@ public partial class TaskOne : Window
         {
             var node = nodes[vertexIndex];
             node.Ellipse.Fill = Brushes.LightGreen;  // Цвет для посещённых вершин
+            string stepMessage = $"DFS: Visiting Node {vertexIndex} at position {node.Position}.";
+            Console.WriteLine(stepMessage);
+            StepsListBox.Items.Add(stepMessage); // Добавляем шаг в ListBox
             await Task.Delay(500); // Задержка в 500 миллисекунд
         }
     }
@@ -312,6 +322,9 @@ public partial class TaskOne : Window
         {
             var node = nodes[vertexIndex];
             node.Ellipse.Fill = Brushes.Yellow;  // Цвет для посещённых вершин
+            string stepMessage = $"BFS: Visiting Node {vertexIndex} at position {node.Position}.";
+            Console.WriteLine(stepMessage);
+            StepsListBox.Items.Add(stepMessage); // Добавляем шаг в ListBox
             await Task.Delay(500); // Задержка в 500 миллисекунд
         }
     }
