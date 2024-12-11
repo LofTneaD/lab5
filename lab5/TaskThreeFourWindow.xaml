@@ -7,6 +7,44 @@
         mc:Ignorable="d"
         Title="TaskThreeFourWindow" Height="450" Width="800">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel x:Name="ButtonPanel" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10">
+            <Button Content="Добавить узел" Click="AddNode_Click" Margin="5" Width="120"/>
+            <Button Content="Удалить узел" Click="RemoveNode_Click" Margin="5" Width="120"/>
+            <Button Content="Добавить ребро" Click="AddEdge_Click" Margin="5" Width="120"/>
+            <Button Content="Удалить ребро" Click="RemoveEdge_Click" Margin="5" Width="120"/>
+            <Button Content="Очистить граф" Click="ClearGraph_Click" Margin="5" Width="120"/>
+            <Button Content="Очистить лог" Click="ClearLogBox_Click" Margin="5" Width="120"/>
+            <Button Content="Найти МОД" Click="FindMinimumSpanningTree_Click" Margin="5" Width="120"/>
+            <!-- Панель ввода для ребер -->
+            <StackPanel x:Name="EdgeInputPanel" Visibility="Collapsed" Margin="5">
+                <TextBlock Text="Начальная вершина:" Margin="5"/>
+                <TextBox x:Name="StartNodeTextBox" Margin="5" Width="110"/>
+                <TextBlock Text="Конечная вершина:" Margin="5"/>
+                <TextBox x:Name="EndNodeTextBox" Margin="5" Width="110"/>
+                <TextBlock Text="Вес ребра:" Margin="5"/>
+                <TextBox x:Name="WeightTextBox" Margin="5" Width="110"/>
+                <Button Content="Подтвердить" Click="ConfirmEdgeInput_Click" Margin="5" Width="110"/>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Background="LightGray" Margin="10" CornerRadius="5">
+                <Canvas Name="GraphCanvas" Background="LightGray" MouseLeftButtonDown="Canvas_MouseLeftButtonDown"/>
+            </Border>
+
+            <TextBox x:Name="LogBox" Margin="10" Height="100" 
+         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+         IsReadOnly="True" Grid.Row="1" />
+        </Grid>
     </Grid>
 </Window>
