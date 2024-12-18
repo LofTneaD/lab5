@@ -15,9 +15,9 @@
                 <Button Content="Load Graph" Margin="5" Padding="10,5" Click="LoadButton_Click" />
                 <Button Content="BFS" Margin="5" Padding="10,5" Click="BFSButton_Click" />
                 <Button Content="DFS" Margin="5" Padding="10,5" Click="DFSButton_Click" />
-                <Button Content="Dijkstra" Click="DijkstraButton_Click" />
-                <Button Content="Clear Graph" Click="ClearGraphButton_Click" />
-                <Button Content="Load Matrix" Click="LoadMatrixButton_Click" Width="100" Height="30" Margin="10"/>
+                <Button Content="Dijkstra" Margin="5" Padding="10,5" Click="DijkstraButton_Click" />
+                <Button Content="Clear Graph" Margin="5" Padding="10,5" Click="ClearGraphButton_Click" />
+                <Button Content="Load Matrix" Click="LoadMatrixButton_Click" Margin="5" Padding="10,5"/>
             </StackPanel>
 
             <!-- Область для редактирования графа -->

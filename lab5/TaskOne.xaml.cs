@@ -63,7 +63,7 @@ public partial class TaskOne : Window
         {
             Width = 30,
             Height = 30,
-            Fill = Brushes.LightBlue,
+            Fill = Brushes.SlateGray,
             Stroke = Brushes.Black,
             StrokeThickness = 2
         };
@@ -71,10 +71,22 @@ public partial class TaskOne : Window
         Canvas.SetLeft(ellipse, position.X - 15);
         Canvas.SetTop(ellipse, position.Y - 15);
         GraphCanvas.Children.Add(ellipse);
-
         newNode.Ellipse = ellipse;
-    }
 
+        TextBlock nodeLabel = new TextBlock
+        {
+            Text = (nodes.Count - 1).ToString(),
+            FontSize = 14,
+            Foreground = Brushes.Black,
+            Background = Brushes.SlateGray
+        };
+        Canvas.SetLeft(nodeLabel, position.X - 10);
+        Canvas.SetTop(nodeLabel, position.Y - 10);
+        GraphCanvas.Children.Add(nodeLabel);
+        newNode.Label = nodeLabel;
+
+        UpdateNodeLabels(); // Обновляем нумерацию
+    }
 
     private void AddEdge(Node node1, Node node2, int weight)
     {
@@ -117,10 +129,6 @@ public partial class TaskOne : Window
         adjList[index2].Add(new Tuple<int, int>(index1, weight)); // Для неориентированного графа
     }
 
-
-
-
-
     private Node GetNodeAtPosition(Point position)
     {
         foreach (var node in nodes)
@@ -137,32 +145,50 @@ public partial class TaskOne : Window
 
     private void DeleteNode(Node node)
     {
-        Console.WriteLine($"Deleting Node at {node.Position}.");
-        foreach (var edge in edges.FindAll(e => e.Node1 == node || e.Node2 == node))
+        if (node != null)
         {
-            GraphCanvas.Children.Remove(edge.Line);      // Удаляем линию ребра
-            GraphCanvas.Children.Remove(edge.WeightText); // Удаляем текст веса ребра
+            // Удаляем метку узла с Canvas
+            GraphCanvas.Children.Remove(node.Label);
+
+            // Удаляем узел с Canvas
+            GraphCanvas.Children.Remove(node.Ellipse);
+
+            // Удаляем узел из списка
+            nodes.Remove(node);
+
+            // Удаляем все рёбра, связанные с этим узлом
+            foreach (var edge in edges.FindAll(e => e.Node1 == node || e.Node2 == node))
+            {
+                GraphCanvas.Children.Remove(edge.Line);      // Удаляем линию ребра
+                GraphCanvas.Children.Remove(edge.WeightText); // Удаляем текст веса ребра
+            }
+            edges.RemoveAll(e => e.Node1 == node || e.Node2 == node);
+
+            // Обновляем смежный список
+            int index = nodes.IndexOf(node);
+            if (adjList.ContainsKey(index))
+            {
+                adjList.Remove(index);
+            }
+
+            foreach (var key in adjList.Keys.ToList())
+            {
+                adjList[key].RemoveAll(e => e.Item1 == index);
+            }
+
+            // Перенумеровываем узлы
+            UpdateNodeLabels();
         }
-
-        edges.RemoveAll(e => e.Node1 == node || e.Node2 == node);
-
-        int index = nodes.IndexOf(node);
-        if (adjList.ContainsKey(index))
-        {
-            adjList.Remove(index);
-        }
-
-        foreach (var key in adjList.Keys.ToList())
-        {
-            adjList[key].RemoveAll(e => e.Item1 == index);
-        }
-
-        GraphCanvas.Children.Remove(node.Ellipse);
-        nodes.Remove(node);
     }
 
-
-
+    private void UpdateNodeLabels()
+    {
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            nodes[i].Label.Text = i.ToString();
+        }
+    }
+    
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Delete && selectedNode != null)
@@ -204,10 +230,7 @@ public partial class TaskOne : Window
 
         return result;
     }
-
-
-
-
+    
     public List<int> BFS(int start)
     {
         var visited = new HashSet<int>();
@@ -238,7 +261,6 @@ public partial class TaskOne : Window
 
         return result;
     }
-
     
     public Dictionary<int, int> Dijkstra(int start, out Dictionary<int, int> previous)
     {
@@ -298,11 +320,7 @@ public partial class TaskOne : Window
         nodes.Clear();
         adjList.Clear(); // Очистить смежный список
     }
-
-
-
-
-
+    
     private async Task VisualizeDFS(List<int> visitedVertices)
     {
         foreach (var vertexIndex in visitedVertices)
@@ -355,9 +373,6 @@ public partial class TaskOne : Window
         // Выделяем стартовую вершину другим цветом
         nodes[start].Ellipse.Fill = Brushes.Green;
     }
-
-
-
     
     private void SaveGraph(string filePath)
     {
@@ -375,7 +390,6 @@ public partial class TaskOne : Window
             }
         }
     }
-
     
     private void LoadGraph(string filePath)
     {
@@ -436,66 +450,65 @@ public partial class TaskOne : Window
         }
     }
 
-private void LoadAdjacencyMatrix(int[,] matrix)
-{
-    int size = matrix.GetLength(0);
-
-    // Создание вершин
-    for (int i = 0; i < size; i++)
+    private void LoadAdjacencyMatrix(int[,] matrix)
     {
-        AddNode(new Point(50 + i * 50, 100)); // Располагаем узлы на Canvas
-    }
+        int size = matrix.GetLength(0);
 
-    // Создание рёбер
-    for (int i = 0; i < size; i++)
-    {
-        for (int j = 0; j < size; j++)
+        // Создание вершин
+        for (int i = 0; i < size; i++)
         {
-            if (matrix[i, j] > 0)
+            AddNode(new Point(50 + i * 50, 100)); // Располагаем узлы на Canvas
+        }
+
+        // Создание рёбер
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
             {
-                AddEdge(nodes[i], nodes[j], matrix[i, j]);
+                if (matrix[i, j] > 0)
+                {
+                    AddEdge(nodes[i], nodes[j], matrix[i, j]);
+                }
             }
         }
     }
-}
 
-private void LoadIncidenceMatrix(int[,] matrix)
-{
-    int nodeCount = matrix.GetLength(0);
-    int edgeCount = matrix.GetLength(1);
-
-    // Создание вершин
-    for (int i = 0; i < nodeCount; i++)
+    private void LoadIncidenceMatrix(int[,] matrix)
     {
-        AddNode(new Point(50 + i * 50, 100)); // Располагаем узлы на Canvas
-    }
+        int nodeCount = matrix.GetLength(0);
+        int edgeCount = matrix.GetLength(1);
 
-    // Создание рёбер
-    for (int j = 0; j < edgeCount; j++)
-    {
-        int node1 = -1, node2 = -1, weight = 1;
+        // Создание вершин
         for (int i = 0; i < nodeCount; i++)
         {
-            if (matrix[i, j] != 0)
+            AddNode(new Point(50 + i * 50, 100)); // Располагаем узлы на Canvas
+        }
+
+        // Создание рёбер
+        for (int j = 0; j < edgeCount; j++)
+        {
+            int node1 = -1, node2 = -1, weight = 1;
+            for (int i = 0; i < nodeCount; i++)
             {
-                if (node1 == -1)
+                if (matrix[i, j] != 0)
                 {
-                    node1 = i;
-                    weight = matrix[i, j];
-                }
-                else
-                {
-                    node2 = i;
+                    if (node1 == -1)
+                    {
+                        node1 = i;
+                        weight = matrix[i, j];
+                    }
+                    else
+                    {
+                        node2 = i;
+                    }
                 }
             }
-        }
-        if (node1 != -1 && node2 != -1)
-        {
-            AddEdge(nodes[node1], nodes[node2], weight);
+            if (node1 != -1 && node2 != -1)
+            {
+                AddEdge(nodes[node1], nodes[node2], weight);
+            }
         }
     }
-}
-
     
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
@@ -552,6 +565,7 @@ private void LoadIncidenceMatrix(int[,] matrix)
             await VisualizeDijkstra(distances, previous, startVertex, targetVertex);
         }
     }
+    
     private void ClearGraphButton_Click(object sender, RoutedEventArgs e)
     {
         ClearGraph();
@@ -569,13 +583,13 @@ private void LoadIncidenceMatrix(int[,] matrix)
             LoadMatrix(openFileDialog.FileName);
         }
     }
-
 }
 
 public class Node
 {
     public Point Position { get; set; }
     public Ellipse Ellipse { get; set; }
+    public TextBlock Label { get; set; } // Ссылка на текстовый элемент с номером
 }
 
 public class Edge
@@ -586,7 +600,6 @@ public class Edge
     public int Weight { get; set; } // Вес ребра
     public TextBlock WeightText { get; set; } // Добавляем ссылку на TextBlock для веса ребра
 }
-
 
 public class InputBox : Window
 {
